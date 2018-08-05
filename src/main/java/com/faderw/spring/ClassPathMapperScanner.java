@@ -20,10 +20,10 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Set;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.mybatis.spring.mapper.MapperFactoryBean;
-import org.mybatis.spring.mapper.MapperScannerConfigurer;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -32,12 +32,18 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.core.env.Environment;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.StringUtils;
+import tk.mybatis.mapper.entity.Config;
+import tk.mybatis.mapper.mapperhelper.MapperHelper;
+import tk.mybatis.spring.mapper.MapperFactoryBean;
+import tk.mybatis.spring.mapper.MapperScannerConfigurer;
+import tk.mybatis.spring.mapper.SpringBootBindUtil;
 
 /**
  * A {@link ClassPathBeanDefinitionScanner} that registers Mappers by
@@ -56,6 +62,9 @@ import org.springframework.util.StringUtils;
  */
 public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
 
+    @Getter@Setter
+    private String prefix;
+
     private boolean addToConfig = true;
 
     private SqlSessionFactory sqlSessionFactory;
@@ -69,6 +78,12 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
     private Class<? extends Annotation> annotationClass;
 
     private Class<?> markerInterface;
+
+    @Getter@Setter
+    private MapperHelper mapperHelper = new MapperHelper();
+
+    @Getter@Setter
+    private String mapperHelperBeanName;
 
     private MapperFactoryBean<?> mapperFactoryBean = new MapperFactoryBean<Object>();
 
@@ -119,7 +134,7 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
 
         // if specified, use the given annotation and / or marker interface
         if (this.annotationClass != null) {
-            addIncludeFilter(new AnnotationTypeFilter(this.annotationClass));
+            addIncludeFilter(new MapperAnnotationTypeFilter(this.annotationClass, prefix));
             acceptAllInterfaces = false;
         }
 
@@ -170,6 +185,23 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
         }
 
         return beanDefinitions;
+    }
+
+    public void setMapperProperties(Environment environment) {
+        Config config = SpringBootBindUtil.bind(environment, Config.class, Config.PREFIX);
+        if (mapperHelper == null) {
+            mapperHelper = new MapperHelper();
+        }
+        if (config != null) {
+            mapperHelper.setConfig(config);
+        }
+    }
+
+    public void setConfig(Config config) {
+        if (mapperHelper == null) {
+            mapperHelper = new MapperHelper();
+        }
+        mapperHelper.setConfig(config);
     }
 
     private void processBeanDefinitions(Set<BeanDefinitionHolder> beanDefinitions) {
