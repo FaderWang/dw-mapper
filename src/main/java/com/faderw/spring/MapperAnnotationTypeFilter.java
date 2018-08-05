@@ -19,6 +19,7 @@ public class MapperAnnotationTypeFilter extends AnnotationTypeFilter{
 
     public MapperAnnotationTypeFilter(Class<? extends Annotation> annotationType, String value) {
         this(annotationType, false);
+        this.annotationType = annotationType;
         this.value = value;
     }
 

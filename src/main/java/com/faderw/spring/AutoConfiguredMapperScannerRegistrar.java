@@ -70,7 +70,7 @@ public class AutoConfiguredMapperScannerRegistrar
         String transactionManagerBeanName = prefix + "TransactionManager";
 
         BeanDefinitionBuilder sqlSessionFactory = BeanDefinitionBuilder.genericBeanDefinition(SqlSessionFactoryBean.class);
-        sqlSessionFactory.addPropertyReference("datasource", dataSourceBeanName);
+        sqlSessionFactory.addPropertyReference("dataSource", dataSourceBeanName);
         registry.registerBeanDefinition(sqlSessionFactoryBeanName, sqlSessionFactory.getBeanDefinition());
 
         BeanDefinitionBuilder sqlSessionTemplate = BeanDefinitionBuilder.genericBeanDefinition(SqlSessionTemplate.class);
@@ -92,7 +92,7 @@ public class AutoConfiguredMapperScannerRegistrar
             if (this.resourceLoader != null) {
                 scanner.setResourceLoader(this.resourceLoader);
             }
-            scanner.setSqlSessionFactoryBeanName(sqlSessionFactoryBeanName);
+//            scanner.setSqlSessionFactoryBeanName(sqlSessionFactoryBeanName);
             scanner.setAnnotationClass(Mapper.class);
             scanner.registerFilters();
             scanner.doScan(scanPackages);
